@@ -1,0 +1,651 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>HSC Multimedia Tracker</title>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+*{box-sizing:border-box;margin:0;padding:0}
+body{font-family:'DM Sans',sans-serif;background:#F5F4F0;color:#1A1916;min-height:100vh}
+/* AUTH */
+.auth-wrap{min-height:100vh;display:flex;align-items:center;justify-content:center;padding:2rem}
+.auth-card{background:#fff;border:1px solid #E2E0D8;border-radius:14px;padding:2.5rem;width:100%;max-width:420px;box-shadow:0 4px 12px rgba(0,0,0,.08)}
+.auth-logo{width:44px;height:44px;background:#1D6B4E;border-radius:10px;display:flex;align-items:center;justify-content:center;font-size:22px;margin-bottom:1.5rem}
+.auth-card h1{font-size:22px;font-weight:600;margin-bottom:4px}
+.auth-card .sub{font-size:13px;color:#6B6860;margin-bottom:1.5rem}
+.auth-tabs{display:flex;border:1px solid #E2E0D8;border-radius:8px;overflow:hidden;margin-bottom:1.5rem}
+.auth-tabs button{flex:1;padding:9px;font-family:'DM Sans',sans-serif;font-size:13px;border:none;background:none;cursor:pointer;color:#6B6860;transition:all .15s}
+.auth-tabs button.active{background:#1A1916;color:#fff;font-weight:500}
+label{display:block;font-size:13px;font-weight:500;color:#6B6860;margin-bottom:5px}
+.inp{width:100%;padding:10px 12px;border:1.5px solid #E2E0D8;border-radius:8px;font-family:'DM Sans',sans-serif;font-size:14px;background:#F5F4F0;color:#1A1916;outline:none;margin-bottom:1rem}
+.inp:focus{border-color:#1D6B4E;background:#fff}
+.btn-green{width:100%;padding:11px;background:#1D6B4E;color:#fff;border:none;border-radius:8px;font-family:'DM Sans',sans-serif;font-size:14px;font-weight:500;cursor:pointer}
+.btn-green:hover{opacity:.9}
+.auth-msg{font-size:13px;padding:10px 12px;border-radius:8px;margin-top:1rem;display:none}
+.auth-msg.err{background:#FEF0F0;color:#9B2626;display:block}
+.auth-msg.ok{background:#E6F2EC;color:#1D6B4E;display:block}
+/* APP */
+#app{display:none}
+.topbar{background:#fff;border-bottom:1px solid #E2E0D8;padding:0 1.5rem;height:56px;display:flex;align-items:center;justify-content:space-between;position:sticky;top:0;z-index:100}
+.topbar-left{display:flex;align-items:center;gap:10px}
+.tlogo{width:28px;height:28px;background:#1D6B4E;border-radius:7px;display:flex;align-items:center;justify-content:center;font-size:14px}
+.tname{font-size:15px;font-weight:600}
+.topbar-right{display:flex;align-items:center;gap:10px}
+.user-chip{font-size:12px;color:#6B6860;background:#F5F4F0;border:1px solid #E2E0D8;border-radius:20px;padding:4px 12px;max-width:250px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.btn-out{font-size:13px;background:#fff;border:1.5px solid #E2E0D8;border-radius:8px;padding:6px 14px;cursor:pointer;font-family:'DM Sans',sans-serif;color:#1A1916}
+.btn-out:hover{background:#F5F4F0}
+.layout{display:flex;max-width:1080px;margin:0 auto;padding:1.5rem;gap:1.25rem}
+/* SIDEBAR */
+.sidebar{width:220px;min-width:220px}
+.scard{background:#fff;border:1px solid #E2E0D8;border-radius:12px;padding:1.25rem;margin-bottom:1rem;box-shadow:0 1px 3px rgba(0,0,0,.06)}
+.slabel{font-size:11px;font-weight:600;text-transform:uppercase;letter-spacing:.5px;color:#9E9C96;margin-bottom:.75rem}
+.big-pct{font-size:34px;font-weight:600;color:#1D6B4E;line-height:1}
+.big-sub{font-size:13px;color:#6B6860;margin-top:4px;margin-bottom:.75rem}
+.prog-track{height:6px;background:#E2E0D8;border-radius:3px;overflow:hidden;margin-bottom:1.25rem}
+.prog-fill{height:100%;background:#1D6B4E;border-radius:3px;transition:width .3s}
+.cat-row{display:flex;justify-content:space-between;font-size:12px;margin-bottom:4px}
+.cat-bar{height:3px;background:#E2E0D8;border-radius:2px;margin-bottom:10px;overflow:hidden}
+.cat-fill{height:100%;border-radius:2px;transition:width .3s}
+.nav-btn{display:block;width:100%;text-align:left;padding:8px 10px;border-radius:8px;font-size:13px;color:#6B6860;background:none;border:none;cursor:pointer;font-family:'DM Sans',sans-serif;margin-bottom:2px;transition:all .15s}
+.nav-btn:hover{background:#F5F4F0;color:#1A1916}
+.nav-btn.active{background:#E6F2EC;color:#1D6B4E;font-weight:500}
+/* CONTENT */
+.content{flex:1;min-width:0}
+.page-head{margin-bottom:1rem}
+.page-head h2{font-size:19px;font-weight:600}
+.page-head p{font-size:13px;color:#6B6860;margin-top:2px}
+.info-bar{background:#EBF2FB;border:1px solid #BDD4EE;border-radius:8px;padding:10px 14px;font-size:13px;color:#1A4F8A;margin-bottom:1rem;line-height:1.5}
+.warn-bar{background:#FEF3E2;border:1px solid #E8C88A;border-radius:8px;padding:10px 14px;font-size:13px;color:#92580A;margin-bottom:1rem;line-height:1.5}
+/* SECTIONS */
+.sec-card{background:#fff;border:1px solid #E2E0D8;border-radius:12px;margin-bottom:10px;overflow:hidden;box-shadow:0 1px 3px rgba(0,0,0,.06)}
+.sec-head{display:flex;align-items:center;justify-content:space-between;padding:13px 16px;cursor:pointer;user-select:none}
+.sec-head:hover{background:#FAFAF8}
+.sec-head-left{display:flex;align-items:center;gap:10px}
+.badge{font-size:10px;font-weight:600;padding:3px 8px;border-radius:20px}
+.bf{background:#E6F2EC;color:#1D6B4E}
+.bp{background:#EBF2FB;color:#1A4F8A}
+.be{background:#FEF3E2;color:#92580A}
+.bt{background:#EEEDFE;color:#3C3489}
+.bti{background:#EAF3DE;color:#27500A}
+.sec-title{font-size:14px;font-weight:500}
+.sec-count{font-size:12px;color:#9E9C96}
+.chev{font-size:11px;color:#9E9C96;transition:transform .2s;display:inline-block;margin-left:6px}
+.chev.open{transform:rotate(90deg)}
+.sec-body{display:none;border-top:1px solid #E2E0D8}
+.sec-body.open{display:block}
+/* ITEMS */
+.c-item{display:flex;align-items:flex-start;gap:14px;padding:12px 16px;border-bottom:1px solid #F0EFE8}
+.c-item:last-child{border-bottom:none}
+.c-item:hover{background:#FAFAF8}
+.chkbox{width:22px;height:22px;min-width:22px;border:2px solid #C8C5BB;border-radius:5px;display:flex;align-items:center;justify-content:center;cursor:pointer;background:#fff;transition:all .15s;margin-top:1px;font-size:14px;color:transparent;font-weight:700;line-height:1}
+.chkbox:hover{border-color:#1D6B4E;background:#E6F2EC}
+.chkbox.done{background:#1D6B4E;border-color:#1D6B4E;color:#fff}
+.c-body{flex:1;min-width:0}
+.c-text{font-size:14px;color:#1A1916;line-height:1.5}
+.c-text.done{color:#9E9C96;text-decoration:line-through}
+.c-note{font-size:12px;color:#6B6860;margin-top:3px;line-height:1.5}
+.c-pills{display:flex;gap:6px;flex-wrap:wrap;margin-top:5px}
+.pill{font-size:11px;padding:2px 8px;border-radius:20px;border:1px solid #E2E0D8;color:#6B6860}
+.pill.hi{background:#E6F2EC;color:#1D6B4E;border-color:#A8D9BF}
+.pill.due{background:#FEF0F0;color:#9B2626;border-color:#F5BABA}
+/* UPLOADS */
+.ucard{background:#fff;border:1px solid #E2E0D8;border-radius:12px;padding:1.5rem;margin-bottom:1rem;box-shadow:0 1px 3px rgba(0,0,0,.06)}
+.ucard h3{font-size:15px;font-weight:600;margin-bottom:4px}
+.ucard p{font-size:13px;color:#6B6860;margin-bottom:1.25rem}
+.drop-zone{border:2px dashed #C8C5BB;border-radius:8px;padding:2rem;text-align:center;cursor:pointer;background:#F5F4F0;transition:all .15s;margin-bottom:1rem}
+.drop-zone:hover{border-color:#1D6B4E;background:#E6F2EC}
+.drop-icon{font-size:28px;margin-bottom:8px}
+.link-row{display:flex;gap:8px;margin-bottom:8px}
+.link-row .inp{margin-bottom:0;flex:1}
+.btn-add{padding:10px 16px;background:#1D6B4E;color:#fff;border:none;border-radius:8px;font-family:'DM Sans',sans-serif;font-size:13px;font-weight:500;cursor:pointer;white-space:nowrap}
+.u-list{list-style:none}
+.u-item{display:flex;align-items:center;gap:12px;padding:10px 12px;background:#F5F4F0;border:1px solid #E2E0D8;border-radius:8px;margin-bottom:6px}
+.u-icon{font-size:18px;min-width:22px;text-align:center}
+.u-info{flex:1;min-width:0}
+.u-name{font-size:13px;font-weight:500;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.u-meta{font-size:11px;color:#9E9C96;margin-top:1px}
+.u-link{font-size:12px;color:#1D6B4E;text-decoration:none}
+.u-link:hover{text-decoration:underline}
+.u-del{background:none;border:none;color:#9E9C96;cursor:pointer;font-size:16px;padding:2px 6px;border-radius:4px}
+.u-del:hover{color:#9B2626;background:#FEF0F0}
+/* TABLE */
+.tbl{width:100%;border-collapse:collapse;font-size:13px;margin-bottom:1rem;background:#fff;border:1px solid #E2E0D8;border-radius:8px;overflow:hidden}
+.tbl th{padding:9px 13px;background:#F5F4F0;color:#6B6860;font-weight:500;text-align:left;font-size:12px}
+.tbl td{padding:9px 13px;border-top:1px solid #E2E0D8;vertical-align:top;line-height:1.5}
+.sw-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(170px,1fr));gap:10px;padding:1rem 1.25rem}
+.sw-card{background:#F5F4F0;border:1px solid #E2E0D8;border-radius:8px;padding:12px}
+.sw-name{font-size:13px;font-weight:500;margin-bottom:4px}
+.sw-desc{font-size:12px;color:#6B6860;line-height:1.45}
+.band-row{display:flex;gap:12px;padding:11px 0;border-bottom:1px solid #E2E0D8}
+.band-row:last-child{border-bottom:none}
+.band-dot{width:10px;height:10px;min-width:10px;border-radius:50%;margin-top:4px}
+.band-name{font-size:13px;font-weight:500;min-width:58px}
+.band-desc{font-size:13px;color:#6B6860;line-height:1.5}
+.toast{position:fixed;bottom:1.5rem;right:1.5rem;background:#1A1916;color:#fff;padding:10px 18px;border-radius:8px;font-size:13px;font-weight:500;opacity:0;transform:translateY(6px);transition:all .2s;pointer-events:none;z-index:999}
+.toast.show{opacity:1;transform:translateY(0)}
+.spinner{text-align:center;padding:2rem;color:#9E9C96;font-size:13px}
+</style>
+</head>
+<body>
+
+<div id="auth-screen" class="auth-wrap">
+  <div class="auth-card">
+    <div class="auth-logo">&#128203;</div>
+    <h1>HSC Multimedia Tracker</h1>
+    <p class="sub">Industrial Technology Stage 6 &mdash; Year 12</p>
+    <div class="auth-tabs">
+      <button id="btn-login" class="active" onclick="authTab('login')">Sign in</button>
+      <button id="btn-signup" onclick="authTab('signup')">Create account</button>
+    </div>
+    <div id="form-login">
+      <label>School email</label>
+      <input class="inp" type="email" id="li-email" placeholder="you@shirechristian.nsw.edu.au">
+      <label>Password</label>
+      <input class="inp" type="password" id="li-pw" placeholder="Password">
+      <button class="btn-green" onclick="doLogin()">Sign in</button>
+    </div>
+    <div id="form-signup" style="display:none">
+      <label>Full name</label>
+      <input class="inp" type="text" id="su-name" placeholder="Your full name">
+      <label>School email</label>
+      <input class="inp" type="email" id="su-email" placeholder="you@shirechristian.nsw.edu.au">
+      <label>Password (min 8 characters)</label>
+      <input class="inp" type="password" id="su-pw" placeholder="Password">
+      <button class="btn-green" onclick="doSignup()">Create account</button>
+    </div>
+    <div class="auth-msg" id="auth-msg"></div>
+  </div>
+</div>
+
+<div id="app">
+  <div class="topbar">
+    <div class="topbar-left">
+      <div class="tlogo">&#128203;</div>
+      <span class="tname">HSC Multimedia Tracker</span>
+    </div>
+    <div class="topbar-right">
+      <span class="user-chip" id="user-chip"></span>
+      <button class="btn-out" id="btn-signout">Sign out</button>
+    </div>
+  </div>
+  <div class="layout">
+    <aside class="sidebar">
+      <div class="scard">
+        <div class="slabel">Overall progress</div>
+        <div class="big-pct" id="ov-pct">0%</div>
+        <div class="big-sub" id="ov-sub">0 of 0 tasks</div>
+        <div class="prog-track"><div class="prog-fill" id="ov-bar" style="width:0%"></div></div>
+        <div class="cat-row"><span style="color:#6B6860">Folio</span><span id="cv-folio" style="font-weight:500">0/0</span></div>
+        <div class="cat-bar"><div class="cat-fill" id="cb-folio" style="width:0%;background:#1D6B4E"></div></div>
+        <div class="cat-row"><span style="color:#6B6860">Production</span><span id="cv-prod" style="font-weight:500">0/0</span></div>
+        <div class="cat-bar"><div class="cat-fill" id="cb-prod" style="width:0%;background:#1A4F8A"></div></div>
+        <div class="cat-row"><span style="color:#6B6860">Exam</span><span id="cv-exam" style="font-weight:500">0/0</span></div>
+        <div class="cat-bar"><div class="cat-fill" id="cb-exam" style="width:0%;background:#92580A"></div></div>
+        <div class="cat-row"><span style="color:#6B6860">Theory</span><span id="cv-theory" style="font-weight:500">0/0</span></div>
+        <div class="cat-bar"><div class="cat-fill" id="cb-theory" style="width:0%;background:#3C3489"></div></div>
+      </div>
+      <div class="scard">
+        <div class="slabel">Sections</div>
+        <button class="nav-btn active" onclick="goTab('folio',this)">&#128193; Folio development</button>
+        <button class="nav-btn" onclick="goTab('production',this)">&#127916; Practical</button>
+        <button class="nav-btn" onclick="goTab('exam',this)">&#9999;&#65039; HSC exam</button>
+        <button class="nav-btn" onclick="goTab('theory',this)">&#128218; Theory</button>
+        <button class="nav-btn" onclick="goTab('products',this)">&#128295; Products &amp; tools</button>
+        <button class="nav-btn" onclick="goTab('time',this)">&#128197; Time plan</button>
+        <button class="nav-btn" onclick="goTab('uploads',this)">&#9729;&#65039; My uploads</button>
+      </div>
+    </aside>
+    <main class="content" id="main-content"></main>
+  </div>
+</div>
+
+<div class="toast" id="toast"></div>
+
+<script>
+const SB_URL = 'https://jthaexmfyiilcwciqdyl.supabase.co';
+const SB_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Imp0aGFleG1meWlpbGN3Y2lxZHlsIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzgwMjY0MTUsImV4cCI6MjA5MzYwMjQxNX0.ewWjAlcgZMcsFH-t71uLXZsuXxo96P3Ejvyh-1cyBn4';
+const sb = supabase.createClient(SB_URL, SB_KEY);
+
+let USER = null;
+let CHECKS = {};
+
+// ── SECTIONS DATA ──────────────────────────────────────────
+const SECTIONS = [
+  {id:'s1',tab:'folio',badge:'bf',label:'1.0',title:'Project Proposal & Statement of Intent',items:[
+    {id:'s1_1',cat:'folio',text:'Write Statement of Intent: what, why, who, where, how',note:'Must explain the problem being solved and the project purpose.',pills:['T4 Wk 1-2'],hi:true},
+    {id:'s1_2',cat:'folio',text:'Identify 5-6 Limitations with strategies to overcome each',note:'Cover equipment, time, skills, originality.',pills:['T4 Wk 2']},
+    {id:'s1_3',cat:'folio',text:'Define 5 Criteria for Success - personal, specific and measurable',note:'These become the basis of your final evaluation.',pills:['T4 Wk 2']},
+    {id:'s1_4',cat:'folio',text:'Create Areas of Research table (what, why, how it links to intent)',pills:['T4 Wk 3']},
+    {id:'s1_5',cat:'folio',text:'Complete Initial Research - 3-5 annotated existing works from Vimeo/YouTube',note:'Hand-annotate screenshots. Note what you will borrow from each.',pills:['T4 Wk 3']},
+    {id:'s1_6',cat:'folio',text:'Set up InDesign: Master Pages, unified theme, page numbers, table of contents',pills:['T4 Wk 1']},
+  ]},
+  {id:'s2',tab:'folio',badge:'bf',label:'2.0',title:'Design, Management & Communication',items:[
+    {id:'s2_1',cat:'folio',text:'Create Gantt chart Time Plan (Proposed row + Actual row per activity)',note:'Update the actual row every week - discrepancies earn evaluation marks.',pills:['T4 Wk 4'],hi:true},
+    {id:'s2_2',cat:'folio',text:'Create Finance Plan at industry pricing (hardware, software, equipment)',note:'Proposed vs actual cost. Every item including cards, props, subscriptions.',pills:['T4 Wk 4'],hi:true},
+    {id:'s2_3',cat:'folio',text:'Develop 3+ Concept Designs with annotated positives and negatives',pills:['T4 Wk 4-5']},
+    {id:'s2_4',cat:'folio',text:'Select and justify Final Concept - reference Statement of Intent',pills:['T4 Wk 5']},
+    {id:'s2_5',cat:'folio',text:'Research Existing Designs - 5+ works with synopsis, screenshots, P/N chart',pills:['T4 Wk 6']},
+    {id:'s2_6',cat:'folio',text:'Research Hardware - 2+ options with specs, images, pros and cons',pills:['T4 Wk 6']},
+    {id:'s2_7',cat:'folio',text:'Research Software - all programs with alternatives and justification',pills:['T4 Wk 6']},
+    {id:'s2_8',cat:'folio',text:'Research Equipment - cameras, microphones, lights with P/N assessment',pills:['T4 Wk 6']},
+    {id:'s2_9',cat:'folio',text:'Research Processes - every key technique with P/N evaluation',pills:['T4 Wk 6']},
+    {id:'s2_10',cat:'folio',text:'Selection & Justification of Materials, Components and Processes',note:'Walk the marker through every choice.',pills:['T4 Wk 6-7'],hi:true},
+    {id:'s2_11',cat:'folio',text:'Design Development - refined storyboards, character designs, flowcharts, script',pills:['T4 Wk 7-8']},
+    {id:'s2_12',cat:'folio',text:'Prototyping / Modelling / Testing - tutorial screenshots with evaluations',note:'Every tutorial should appear here with screenshots and what you learnt.',pills:['T4 Wk 7-T1']},
+    {id:'s2_13',cat:'folio',text:'Write Time Management Evaluation (compare proposed vs actual)',pills:['T2 Wk 9-10']},
+    {id:'s2_14',cat:'folio',text:'Write Finance Management Evaluation (total cost, discrepancies, reasons)',pills:['T2 Wk 9-10']},
+  ]},
+  {id:'s3',tab:'folio',badge:'bf',label:'3.0',title:'Production Documentation',items:[
+    {id:'s3_1',cat:'folio',text:'Weekly production evidence - screenshots or photos with brief evaluations',pills:['Ongoing T1-T2']},
+    {id:'s3_2',cat:'folio',text:'WHS - Risk Matrix, Risk Assessment, photographic evidence, Hazard Reduction',note:'Reference WHS Act 2011. Include hierarchy of controls.',pills:['T2 Wk 4'],hi:true},
+    {id:'s3_3',cat:'folio',text:'Outsourcing of Expertise - credit all fonts, music, assets and justify each',pills:['T2 Wk 5']},
+    {id:'s3_4',cat:'folio',text:'Links Between Planning and Production - compare storyboards to final screenshots',note:'Two-column table: planned vs actual. Changes equal evaluation marks.',pills:['T2 Wk 6'],hi:true},
+    {id:'s3_5',cat:'folio',text:'Evidence of Solutions to Problems - at least 3 problems with photo + resolution',note:'Photograph the issue, document the fix, evaluate the impact.',pills:['T2 Wk 7'],hi:true},
+  ]},
+  {id:'s4',tab:'folio',badge:'bf',label:'4.0',title:'Summative Evaluation',items:[
+    {id:'s4_1',cat:'folio',text:'Quality Control - 4 peers score your project at pre, production and post stages',pills:['T2 Wk 8-9']},
+    {id:'s4_2',cat:'folio',text:'Final Evaluation - address every Criterion for Success and Statement of Intent point',note:'The last thing a marker reads. Explain successes and failures honestly.',pills:['T2 Wk 10'],hi:true},
+    {id:'s4_3',cat:'folio',text:'Revisit and update Statement of Intent if project drifted significantly',pills:['T2 Wk 9-10']},
+    {id:'s4_4',cat:'folio',text:'Certification / Declaration Form completed and signed',pills:['T3 Wk 3']},
+    {id:'s4_5',cat:'folio',text:'Page count confirmed within 80 A4 limit - print, check, bind',pills:['T2 Wk 10']},
+  ]},
+  {id:'p1',tab:'production',badge:'bp',label:'Game',title:'Game project',items:[
+    {id:'p1_1',cat:'prod',text:'Choose engine: Unity or GameMaker (or justified alternative)',pills:['T4 Wk 7']},
+    {id:'p1_2',cat:'prod',text:'Complete and document engine tutorial with screenshots in folio',pills:['T4 Wk 7-10']},
+    {id:'p1_3',cat:'prod',text:'Illustrate all characters in Adobe Illustrator or pixel art app',pills:['T4 Wk 8-T1']},
+    {id:'p1_4',cat:'prod',text:'Design at least one complete level with background, foreground and enemies',pills:['T1']},
+    {id:'p1_5',cat:'prod',text:'Implement core gameplay loop - movement, collision, win/lose state',pills:['T1-T2']},
+    {id:'p1_6',cat:'prod',text:'Add sound effects and background music',pills:['T2']},
+    {id:'p1_7',cat:'prod',text:'Document coding process in folio with key script screenshots and explanations',pills:['Ongoing']},
+    {id:'p1_8',cat:'prod',text:'Playtest with peers and document results and changes made',pills:['T2 Wk 7']},
+    {id:'p1_9',cat:'prod',text:'Export final playable build in required format',pills:['T2 Wk 8']},
+  ]},
+  {id:'p2',tab:'production',badge:'bp',label:'Film',title:'Live action film',items:[
+    {id:'p2_1',cat:'prod',text:'Write final script - actors must rehearse before shoot day',pills:['T4 Wk 5-6']},
+    {id:'p2_2',cat:'prod',text:'Finalise shot list and storyboard - you control the camera at all times',pills:['T4 Wk 7']},
+    {id:'p2_3',cat:'prod',text:'Source props, costumes, locations - all documented in folio',pills:['T4 Wk 8']},
+    {id:'p2_4',cat:'prod',text:'Complete ALL filming by end of Term 1',note:'Essential for post-production time.',pills:['T1 Wk 8'],due:true},
+    {id:'p2_5',cat:'prod',text:'Edit in Premiere Pro - rough cut then fine cut with colour grading',pills:['T2 Wk 1-6']},
+    {id:'p2_6',cat:'prod',text:'Add VFX, green screen or After Effects elements',pills:['T2 Wk 3-7'],hi:true},
+    {id:'p2_7',cat:'prod',text:'Sound design - dialogue, foley, music, mix',pills:['T2 Wk 5-7']},
+    {id:'p2_8',cat:'prod',text:'Export final cut in H.264 MP4 at correct specs',pills:['T2 Wk 8']},
+  ]},
+  {id:'p3',tab:'production',badge:'bp',label:'Anim',title:'Animation / motion graphics',items:[
+    {id:'p3_1',cat:'prod',text:'Storyboard every scene before animating',pills:['T4 Wk 7']},
+    {id:'p3_2',cat:'prod',text:'Complete After Effects or Character Animator tutorial - document in folio',pills:['T4 Wk 7-9']},
+    {id:'p3_3',cat:'prod',text:'Work scene-by-scene in separate files to manage RAM and CPU',pills:['T1 onwards']},
+    {id:'p3_4',cat:'prod',text:'Incorporate multiple animation styles - stop motion, motion graphics, cutouts',pills:['T1-T2'],hi:true},
+    {id:'p3_5',cat:'prod',text:'Compose or license soundtrack and implement',pills:['T2 Wk 4']},
+    {id:'p3_6',cat:'prod',text:'Render final animation at HD quality - 1080p minimum',pills:['T2 Wk 7-8']},
+  ]},
+  {id:'e1',tab:'exam',badge:'be',label:'Written',title:'Written paper preparation',items:[
+    {id:'e1_1',cat:'exam',text:'Know the structure: Section I (10 MC), Section II (15 short answer), Section III (15 extended response)'},
+    {id:'e1_2',cat:'exam',text:'Revise Industry Related Manufacturing Technology for Sections I and II',note:'Digital formats, compression, codecs, colour models, resolution, industry workflow.'},
+    {id:'e1_3',cat:'exam',text:'Prepare Industry Study extended response for Section III - approximately 600 words',note:'Industry structure, environmental and organisational factors.',pills:['15 marks'],hi:true},
+    {id:'e1_4',cat:'exam',text:'Complete at least 3 past papers under timed conditions'},
+    {id:'e1_5',cat:'exam',text:'Review marked trial exam responses with teacher feedback'},
+  ]},
+  {id:'e2',tab:'exam',badge:'be',label:'Submit',title:'Major Project submission checklist',items:[
+    {id:'e2_1',cat:'exam',text:'Folio within 80 A4 page limit or 40 A3 equivalent, printed one side only'},
+    {id:'e2_2',cat:'exam',text:'Font is size 12 equivalent or larger throughout'},
+    {id:'e2_3',cat:'exam',text:'All pages numbered, title page and table of contents present'},
+    {id:'e2_4',cat:'exam',text:'No name anywhere on folio - student number only',note:'Marking is anonymous.',pills:['Critical'],due:true},
+    {id:'e2_5',cat:'exam',text:'Multimedia product file in correct format, labelled, not exceeding 6 min viewing time'},
+    {id:'e2_6',cat:'exam',text:'Certification form signed by student, teacher endorsed by principal'},
+    {id:'e2_7',cat:'exam',text:'Teacher record of student progress completed and retained at school'},
+    {id:'e2_8',cat:'exam',text:'Submitted by due date',pills:['Due: T3 Week 3'],due:true},
+  ]},
+  {id:'th1',tab:'theory',badge:'bt',label:'Theory',title:'Core multimedia knowledge',items:[
+    {id:'th1_1',cat:'theory',text:'Digital file types - raster vs vector, lossless vs lossy compression'},
+    {id:'th1_2',cat:'theory',text:'Colour models - RGB, CMYK, HSB and colour theory application'},
+    {id:'th1_3',cat:'theory',text:'Resolution - PPI, DPI, frame rates 24fps 25fps 30fps 60fps'},
+    {id:'th1_4',cat:'theory',text:'Video codecs and containers - H.264, H.265, ProRes, bit rate, aspect ratio'},
+    {id:'th1_5',cat:'theory',text:'Industry workflow - pre-production, production, post-production'},
+    {id:'th1_6',cat:'theory',text:'Copyright, IP, licensing - Creative Commons, royalty-free, fair dealing'},
+    {id:'th1_7',cat:'theory',text:'Industry study - structure, key roles, environmental and organisational factors'},
+    {id:'th1_8',cat:'theory',text:'Impact of technology on society - ethics, accessibility, digital divide'},
+    {id:'th1_9',cat:'theory',text:'WHS legislation - Work Health and Safety Act 2011, hierarchy of controls'},
+    {id:'th1_10',cat:'theory',text:'Design process - iterative design, user testing, prototyping'},
+  ]},
+  {id:'tm1',tab:'time',badge:'bti',label:'T4',title:'Term 4 - Foundation phase',items:[
+    {id:'tm1_1',cat:'time',text:'Wk 1-2: Statement of Intent, title page, table of contents'},
+    {id:'tm1_2',cat:'time',text:'Wk 3: Limitations, Criteria for Success, Areas of Research, Initial Research'},
+    {id:'tm1_3',cat:'time',text:'Wk 4: Time Plan and Finance Plan proposed, initial concept sketches'},
+    {id:'tm1_4',cat:'time',text:'Wk 5-6: Storyboards, scripts, research existing designs, hardware, software'},
+    {id:'tm1_5',cat:'time',text:'Wk 7-8: Design development, prototyping, tutorials - concept work finished',pills:['Task 1 due Wk 8 - 20%'],due:true},
+    {id:'tm1_6',cat:'time',text:'Wk 9-10: Begin creation, program tutorials, fix Assessment 1 feedback'},
+    {id:'tm1_7',cat:'time',text:'Set up backup routine - zip to computer and USB and teacher drive every 2 weeks'},
+  ]},
+  {id:'tm2',tab:'time',badge:'bti',label:'T1',title:'Term 1 - Development phase',items:[
+    {id:'tm2_1',cat:'time',text:'Wk 1-3: Active production, update time plan weekly, quality control pre-production'},
+    {id:'tm2_2',cat:'time',text:'Wk 4-6: Continue production, apply feedback, add design development section'},
+    {id:'tm2_3',cat:'time',text:'Film students: ALL filming complete by Wk 8',pills:['Film deadline T1 Wk 8'],due:true},
+    {id:'tm2_4',cat:'time',text:'Wk 7-8: Maintain progress, informal progress check'},
+    {id:'tm2_5',cat:'time',text:'Wk 9-10: Half-yearly exams',pills:['Task 2 Wk 9 - 15%'],due:true},
+  ]},
+  {id:'tm3',tab:'time',badge:'bti',label:'T2',title:'Term 2 - Production and completion',items:[
+    {id:'tm3_1',cat:'time',text:'Wk 1-3: Major production push - WHS documentation also due this term'},
+    {id:'tm3_2',cat:'time',text:'Wk 4-6: Links between planning and production, outsourcing section, design modifications'},
+    {id:'tm3_3',cat:'time',text:'Wk 7: Evidence of solutions to problems section'},
+    {id:'tm3_4',cat:'time',text:'Wk 8: Project finished, peer evaluation, portfolio 70-80 pages',pills:['Task 3 Wk 8 - 40%'],due:true},
+    {id:'tm3_5',cat:'time',text:'Wk 9-10: Final evaluation, time and finance evaluation, print and bind'},
+  ]},
+  {id:'tm4',tab:'time',badge:'bti',label:'T3',title:'Term 3 - Submission and trials',items:[
+    {id:'tm4_1',cat:'time',text:'Wk 1-2: Final refinements - no new class time after this'},
+    {id:'tm4_2',cat:'time',text:'Wk 3: Major Project due and Trial Exam',pills:['Task 4 + Trial Wk 3 - 25%'],due:true},
+    {id:'tm4_3',cat:'time',text:'Continue revising written paper content for HSC in Term 4'},
+  ]},
+];
+
+// ── AUTH ───────────────────────────────────────────────────
+function authTab(t) {
+  document.getElementById('form-login').style.display = t==='login' ? 'block' : 'none';
+  document.getElementById('form-signup').style.display = t==='signup' ? 'block' : 'none';
+  document.getElementById('btn-login').classList.toggle('active', t==='login');
+  document.getElementById('btn-signup').classList.toggle('active', t==='signup');
+  clearAuthMsg();
+}
+function showAuthMsg(text, type) {
+  var el = document.getElementById('auth-msg');
+  el.textContent = text;
+  el.className = 'auth-msg ' + type;
+}
+function clearAuthMsg() {
+  document.getElementById('auth-msg').className = 'auth-msg';
+}
+async function doLogin() {
+  var email = document.getElementById('li-email').value.trim();
+  var pw = document.getElementById('li-pw').value;
+  if (!email || !pw) { showAuthMsg('Please enter your email and password.', 'err'); return; }
+  var res = await sb.auth.signInWithPassword({ email: email, password: pw });
+  if (res.error) showAuthMsg(res.error.message, 'err');
+}
+async function doSignup() {
+  var name = document.getElementById('su-name').value.trim();
+  var email = document.getElementById('su-email').value.trim();
+  var pw = document.getElementById('su-pw').value;
+  if (!name || !email || !pw) { showAuthMsg('Please fill in all fields.', 'err'); return; }
+  if (pw.length < 8) { showAuthMsg('Password must be at least 8 characters.', 'err'); return; }
+  var res = await sb.auth.signUp({ email: email, password: pw, options: { data: { full_name: name } } });
+  if (res.error) showAuthMsg(res.error.message, 'err');
+  else showAuthMsg('Account created! You can now sign in.', 'ok');
+}
+
+// ── SIGN OUT ───────────────────────────────────────────────
+document.getElementById('btn-signout').onclick = async function() {
+  await sb.auth.signOut();
+};
+
+// ── SESSION ────────────────────────────────────────────────
+sb.auth.onAuthStateChange(async function(event, session) {
+  if (session && session.user) {
+    USER = session.user;
+    document.getElementById('auth-screen').style.display = 'none';
+    document.getElementById('app').style.display = 'block';
+    document.getElementById('user-chip').textContent = session.user.email;
+    await loadChecks();
+    goTab('folio', document.querySelector('.nav-btn.active'));
+  } else {
+    USER = null;
+    CHECKS = {};
+    document.getElementById('auth-screen').style.display = 'flex';
+    document.getElementById('app').style.display = 'none';
+    clearAuthMsg();
+  }
+});
+
+// ── CHECKLIST DB ───────────────────────────────────────────
+async function loadChecks() {
+  CHECKS = {};
+  var res = await sb.from('checklist_items').select('item_id').eq('user_id', USER.id).eq('checked', true);
+  if (res.data) res.data.forEach(function(r) { CHECKS[r.item_id] = true; });
+}
+async function saveTick(itemId, val) {
+  await sb.from('checklist_items').upsert(
+    { user_id: USER.id, item_id: itemId, checked: val, checked_at: val ? new Date().toISOString() : null },
+    { onConflict: 'user_id,item_id' }
+  );
+}
+function tick(itemId) {
+  CHECKS[itemId] = !CHECKS[itemId];
+  var box = document.getElementById('chk-' + itemId);
+  var txt = document.getElementById('txt-' + itemId);
+  if (box) { box.classList.toggle('done', CHECKS[itemId]); box.textContent = CHECKS[itemId] ? '\u2713' : ''; }
+  if (txt) txt.classList.toggle('done', CHECKS[itemId]);
+  saveTick(itemId, CHECKS[itemId]);
+  updateProgress();
+}
+
+// ── TABS ───────────────────────────────────────────────────
+function goTab(name, btn) {
+  document.querySelectorAll('.nav-btn').forEach(function(b) { b.classList.remove('active'); });
+  if (btn) btn.classList.add('active');
+  var mc = document.getElementById('main-content');
+  mc.innerHTML = '';
+  if (name === 'folio') renderFolio();
+  else if (name === 'production') renderProduction();
+  else if (name === 'exam') renderExam();
+  else if (name === 'theory') renderTheory();
+  else if (name === 'products') renderProducts();
+  else if (name === 'time') renderTime();
+  else if (name === 'uploads') renderUploads();
+}
+
+// ── SECTION BUILDER ────────────────────────────────────────
+function buildSections(tabName) {
+  var mc = document.getElementById('main-content');
+  SECTIONS.filter(function(s) { return s.tab === tabName; }).forEach(function(sec) {
+    var done = sec.items.filter(function(it) { return CHECKS[it.id]; }).length;
+    var html = '<div class="sec-card">';
+    html += '<div class="sec-head" onclick="toggleSec(\'' + sec.id + '\')">';
+    html += '<div class="sec-head-left"><span class="badge ' + sec.badge + '">' + sec.label + '</span><span class="sec-title">' + sec.title + '</span></div>';
+    html += '<div style="display:flex;align-items:center"><span class="sec-count" id="cnt-' + sec.id + '">' + done + '/' + sec.items.length + '</span><span class="chev open" id="chev-' + sec.id + '">&#9654;</span></div>';
+    html += '</div>';
+    html += '<div class="sec-body open" id="body-' + sec.id + '">';
+    sec.items.forEach(function(it) { html += buildItem(it); });
+    html += '</div></div>';
+    mc.insertAdjacentHTML('beforeend', html);
+  });
+}
+function buildItem(it) {
+  var done = CHECKS[it.id];
+  var pillsHtml = '';
+  if (it.pills) it.pills.forEach(function(p) { pillsHtml += '<span class="pill' + (it.due ? ' due' : '') + '">' + p + '</span>'; });
+  if (it.hi) pillsHtml += '<span class="pill hi">High impact</span>';
+  return '<div class="c-item">' +
+    '<div class="chkbox' + (done ? ' done' : '') + '" id="chk-' + it.id + '" onclick="tick(\'' + it.id + '\')">' + (done ? '\u2713' : '') + '</div>' +
+    '<div class="c-body">' +
+    '<div class="c-text' + (done ? ' done' : '') + '" id="txt-' + it.id + '">' + it.text + '</div>' +
+    (it.note ? '<div class="c-note">' + it.note + '</div>' : '') +
+    (pillsHtml ? '<div class="c-pills">' + pillsHtml + '</div>' : '') +
+    '</div></div>';
+}
+function toggleSec(id) {
+  var body = document.getElementById('body-' + id);
+  var chev = document.getElementById('chev-' + id);
+  if (!body) return;
+  var open = body.classList.toggle('open');
+  if (chev) chev.classList.toggle('open', open);
+}
+
+// ── TAB RENDERERS ──────────────────────────────────────────
+function renderFolio() {
+  document.getElementById('main-content').innerHTML =
+    '<div class="page-head"><h2>Folio development</h2><p>Worth 20 marks &middot; Max 80 A4 pages, one side only, 12pt font minimum</p></div>' +
+    '<div class="info-bar">Every evaluation must be visually flagged with a coloured border or bold EVALUATION heading so markers find them instantly.</div>';
+  buildSections('folio');
+  updateProgress();
+}
+function renderProduction() {
+  document.getElementById('main-content').innerHTML =
+    '<div class="page-head"><h2>Practical production</h2><p>Worth 40 marks &mdash; the largest component</p></div>' +
+    '<table class="tbl"><tr><th style="width:36%">Criterion</th><th>What markers look for</th></tr>' +
+    '<tr><td>Quality of product</td><td>Consistency throughout &mdash; aesthetics, professionalism, audience impact.</td></tr>' +
+    '<tr><td>Range of skills</td><td>Multiple disciplines such as VFX, sound, coding, illustration. Do not repeat one technique.</td></tr>' +
+    '<tr><td>Degree of difficulty</td><td>Games then animation then film then graphics. Match difficulty to your ability.</td></tr>' +
+    '<tr><td>Appropriate materials and tech</td><td>Right tools for the job, justified in folio.</td></tr>' +
+    '<tr><td>Links planning to production</td><td>Final product reflects storyboards. Changes documented.</td></tr>' +
+    '<tr><td>Solutions to problems</td><td>Problems documented with photos and resolutions.</td></tr></table>';
+  buildSections('production');
+  updateProgress();
+}
+function renderExam() {
+  document.getElementById('main-content').innerHTML =
+    '<div class="page-head"><h2>HSC exam preparation</h2><p>Written Paper (40 marks, 1hr 30min) + Major Project (60 marks)</p></div>';
+  buildSections('exam');
+  document.getElementById('main-content').insertAdjacentHTML('beforeend',
+    '<div class="sec-card" style="padding:1.25rem">' +
+    '<div class="slabel" style="margin-bottom:.75rem">Performance band descriptors</div>' +
+    '<div class="band-row"><div class="band-dot" style="background:#1D6B4E"></div><div class="band-name">Band 6</div><div class="band-desc">Comprehensive knowledge, critically evaluates design solutions, expertise in management, excellence in practical skills.</div></div>' +
+    '<div class="band-row"><div class="band-dot" style="background:#1A4F8A"></div><div class="band-name">Band 5</div><div class="band-desc">Detailed knowledge, justifies solutions through design, competent management, competence in equipment and skills.</div></div>' +
+    '<div class="band-row"><div class="band-dot" style="background:#534AB7"></div><div class="band-name">Band 4</div><div class="band-desc">Broad knowledge, uses design to solve problems, applies appropriate management, sound practical understanding.</div></div>' +
+    '<div class="band-row"><div class="band-dot" style="background:#92580A"></div><div class="band-name">Band 3</div><div class="band-desc">Basic knowledge, attempts design techniques, recognises importance of management.</div></div>' +
+    '<div class="band-row"><div class="band-dot" style="background:#9B2626"></div><div class="band-name">Band 2</div><div class="band-desc">Simple knowledge, narrow communication forms, adequate awareness of design, minimal management skills.</div></div>' +
+    '</div>');
+  updateProgress();
+}
+function renderTheory() {
+  document.getElementById('main-content').innerHTML =
+    '<div class="page-head"><h2>Theory knowledge</h2><p>Build throughout the year &mdash; do not leave it to exam time</p></div>';
+  buildSections('theory');
+  updateProgress();
+}
+function renderTime() {
+  document.getElementById('main-content').innerHTML =
+    '<div class="page-head"><h2>Time management plan</h2><p>Task 1 (20%) T4 Wk 8 &middot; Task 2 (15%) T1 Wk 9 &middot; Task 3 (40%) T2 Wk 8 &middot; Task 4 (25%) T3 Wk 3</p></div>';
+  buildSections('time');
+  updateProgress();
+}
+function renderProducts() {
+  document.getElementById('main-content').innerHTML =
+    '<div class="page-head"><h2>Products &amp; tools</h2><p>Document every item at industry pricing in your Finance Plan</p></div>' +
+    '<div class="sec-card"><div class="sec-head" onclick="toggleSec(\'sw\')"><div class="sec-head-left"><span class="badge bf">Software</span><span class="sec-title">Software toolkit</span></div><span class="chev open" id="chev-sw">&#9654;</span></div>' +
+    '<div class="sec-body open" id="body-sw"><div class="sw-grid">' +
+    '<div class="sw-card"><div class="sw-name">Adobe Premiere Pro</div><div class="sw-desc">Video editing. Industry standard for live action and mixed media.</div></div>' +
+    '<div class="sw-card"><div class="sw-name">Adobe After Effects</div><div class="sw-desc">VFX, motion graphics, compositing. Essential for range of skills marks.</div></div>' +
+    '<div class="sw-card"><div class="sw-name">Adobe Illustrator</div><div class="sw-desc">Vector art, character design, game UI elements.</div></div>' +
+    '<div class="sw-card"><div class="sw-name">Adobe Photoshop</div><div class="sw-desc">Image editing, texture work, concept art.</div></div>' +
+    '<div class="sw-card"><div class="sw-name">Adobe InDesign</div><div class="sw-desc">Portfolio layout. Master pages, unified theme, professional output.</div></div>' +
+    '<div class="sw-card"><div class="sw-name">Unity</div><div class="sw-desc">Game engine. 2D and 3D development. C# scripting. Free tier.</div></div>' +
+    '<div class="sw-card"><div class="sw-name">GameMaker Studio 2</div><div class="sw-desc">2D games. GML scripting. Great for platformers and pixel games.</div></div>' +
+    '<div class="sw-card"><div class="sw-name">Audacity / Logic Pro</div><div class="sw-desc">Audio editing, sound design, music composition.</div></div>' +
+    '</div></div></div>' +
+    '<div class="sec-card"><div class="sec-head" onclick="toggleSec(\'hw\')"><div class="sec-head-left"><span class="badge bp">Hardware</span><span class="sec-title">Finance Plan reference</span></div><span class="chev open" id="chev-hw">&#9654;</span></div>' +
+    '<div class="sec-body open" id="body-hw" style="padding:.5rem 1.25rem 1rem">' +
+    '<table class="tbl" style="margin-top:.75rem"><tr><th>Item</th><th>Industry price</th><th>Notes</th></tr>' +
+    '<tr><td>School iMac or PC</td><td>$2,000-$4,000</td><td>List CPU, RAM, GPU specs</td></tr>' +
+    '<tr><td>Personal laptop</td><td>$1,200-$3,500</td><td>Note limitations</td></tr>' +
+    '<tr><td>DSLR camera body</td><td>$800-$2,500</td><td>Lens, SD card, tripod are separate</td></tr>' +
+    '<tr><td>Prime or zoom lens</td><td>$300-$1,200</td><td>Note focal length and aperture</td></tr>' +
+    '<tr><td>Tripod</td><td>$80-$350</td><td>Fluid head for video</td></tr>' +
+    '<tr><td>Rode microphone</td><td>$250-$600</td><td>Shotgun or lavalier</td></tr>' +
+    '<tr><td>External hard drive</td><td>$100-$250</td><td>Essential for backups</td></tr>' +
+    '<tr><td>Drawing tablet</td><td>$80-$400</td><td>Wacom Intuus or similar</td></tr>' +
+    '</table></div></div>';
+}
+async function renderUploads() {
+  var mc = document.getElementById('main-content');
+  mc.innerHTML =
+    '<div class="page-head"><h2>My uploads &amp; documents</h2><p>Upload your folio PDF or link live documents for your teacher to review</p></div>' +
+    '<div class="ucard"><h3>Upload folio PDF</h3><p>Your teacher sees the file and the exact date and time you uploaded it.</p>' +
+    '<div class="drop-zone" onclick="document.getElementById(\'file-in\').click()">' +
+    '<div class="drop-icon">&#128196;</div><p style="font-size:14px;color:#6B6860;margin:0">Click to browse or drag your PDF here</p>' +
+    '<p style="font-size:12px;color:#9E9C96;margin-top:4px">PDF only &middot; Max 50MB</p></div>' +
+    '<input type="file" id="file-in" accept=".pdf" style="display:none" onchange="uploadPDF(this.files[0])">' +
+    '<div id="upload-status" style="display:none;font-size:13px;color:#6B6860;padding:6px 0">Uploading...</div></div>' +
+    '<div class="ucard"><h3>Link a live document</h3><p>Google Slides, Google Doc, Canva &mdash; your teacher can open it directly.</p>' +
+    '<input class="inp" type="text" id="link-label" placeholder="Label e.g. Folio Draft Week 6">' +
+    '<div class="link-row"><input class="inp" type="text" id="link-url" placeholder="https://docs.google.com/...">' +
+    '<button class="btn-add" onclick="addLink()">Add link</button></div></div>' +
+    '<div class="ucard"><h3>Submitted files &amp; links</h3><p>Everything your teacher can see, with timestamps.</p>' +
+    '<div class="spinner" id="u-loading">Loading...</div><ul class="u-list" id="u-list"></ul></div>';
+  loadUploadList();
+}
+async function uploadPDF(file) {
+  if (!file || !USER) return;
+  if (file.size > 52428800) { showToast('File too large - max 50MB'); return; }
+  var st = document.getElementById('upload-status');
+  st.style.display = 'block'; st.textContent = 'Uploading...';
+  var path = USER.id + '/' + Date.now() + '_' + file.name;
+  var res = await sb.storage.from('folio-uploads').upload(path, file, { contentType: 'application/pdf' });
+  if (res.error) { st.textContent = 'Upload failed: ' + res.error.message; return; }
+  await sb.from('student_uploads').insert({ user_id: USER.id, type: 'pdf', name: file.name, path: path, uploaded_at: new Date().toISOString() });
+  st.style.display = 'none';
+  showToast('Uploaded!');
+  loadUploadList();
+}
+async function addLink() {
+  if (!USER) return;
+  var url = document.getElementById('link-url').value.trim();
+  var label = document.getElementById('link-label').value.trim() || 'Document link';
+  if (!url) { showToast('Please paste a URL.'); return; }
+  await sb.from('student_uploads').insert({ user_id: USER.id, type: 'link', name: label, url: url, uploaded_at: new Date().toISOString() });
+  document.getElementById('link-url').value = '';
+  document.getElementById('link-label').value = '';
+  showToast('Link added!');
+  loadUploadList();
+}
+async function loadUploadList() {
+  var list = document.getElementById('u-list');
+  var loading = document.getElementById('u-loading');
+  if (!list) return;
+  var res = await sb.from('student_uploads').select('*').eq('user_id', USER.id).order('uploaded_at', { ascending: false });
+  if (loading) loading.style.display = 'none';
+  if (!res.data || !res.data.length) { list.innerHTML = '<li style="font-size:13px;color:#9E9C96;padding:6px 0">No uploads yet.</li>'; return; }
+  list.innerHTML = res.data.map(function(u) {
+    var d = new Date(u.uploaded_at);
+    var ds = d.toLocaleDateString('en-AU', { day: 'numeric', month: 'short', year: 'numeric' }) + ' ' + d.toLocaleTimeString('en-AU', { hour: '2-digit', minute: '2-digit' });
+    return '<li class="u-item"><span class="u-icon">' + (u.type === 'pdf' ? '&#128196;' : '&#128279;') + '</span>' +
+      '<div class="u-info"><div class="u-name">' + u.name + '</div>' +
+      '<div class="u-meta">' + ds + (u.url ? ' &middot; <a href="' + u.url + '" target="_blank" class="u-link">Open</a>' : '') + '</div></div>' +
+      '<button class="u-del" onclick="delUpload(' + u.id + ',\'' + (u.path || '') + '\',\'' + u.type + '\')">&#10005;</button></li>';
+  }).join('');
+}
+async function delUpload(id, path, type) {
+  if (!confirm('Remove this item?')) return;
+  if (type === 'pdf' && path) await sb.storage.from('folio-uploads').remove([path]);
+  await sb.from('student_uploads').delete().eq('id', id).eq('user_id', USER.id);
+  showToast('Removed.');
+  loadUploadList();
+}
+
+// ── PROGRESS ───────────────────────────────────────────────
+function updateProgress() {
+  var cats = { folio: { d:0, t:0 }, prod: { d:0, t:0 }, exam: { d:0, t:0 }, theory: { d:0, t:0 } };
+  var total = 0, done = 0;
+  SECTIONS.forEach(function(sec) {
+    sec.items.forEach(function(it) {
+      total++;
+      if (CHECKS[it.id]) done++;
+      var c = cats[it.cat];
+      if (c) { c.t++; if (CHECKS[it.id]) c.d++; }
+    });
+  });
+  var pct = total ? Math.round(done / total * 100) : 0;
+  var op = document.getElementById('ov-pct'); if (op) op.textContent = pct + '%';
+  var os = document.getElementById('ov-sub'); if (os) os.textContent = done + ' of ' + total + ' tasks';
+  var ob = document.getElementById('ov-bar'); if (ob) ob.style.width = pct + '%';
+  Object.keys(cats).forEach(function(key) {
+    var v = cats[key];
+    var p = v.t ? Math.round(v.d / v.t * 100) : 0;
+    var cv = document.getElementById('cv-' + key); if (cv) cv.textContent = v.d + '/' + v.t;
+    var cb = document.getElementById('cb-' + key); if (cb) cb.style.width = p + '%';
+  });
+  SECTIONS.forEach(function(sec) {
+    var el = document.getElementById('cnt-' + sec.id);
+    if (el) el.textContent = sec.items.filter(function(it) { return CHECKS[it.id]; }).length + '/' + sec.items.length;
+  });
+}
+
+// ── TOAST ──────────────────────────────────────────────────
+function showToast(msg) {
+  var t = document.getElementById('toast');
+  t.textContent = msg;
+  t.classList.add('show');
+  setTimeout(function() { t.classList.remove('show'); }, 2500);
+}
+</script>
+</body>
+</html>

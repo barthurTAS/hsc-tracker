@@ -1,0 +1,407 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Teacher Dashboard - HSC Multimedia Tracker</title>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+*{box-sizing:border-box;margin:0;padding:0}
+body{font-family:'DM Sans',sans-serif;background:#F5F4F0;color:#1A1916;min-height:100vh}
+.auth-wrap{min-height:100vh;display:flex;align-items:center;justify-content:center;padding:2rem}
+.auth-card{background:#fff;border:1px solid #E2E0D8;border-radius:14px;padding:2.5rem;width:100%;max-width:400px;box-shadow:0 4px 12px rgba(0,0,0,.08)}
+.auth-logo{width:44px;height:44px;background:#1A4F8A;border-radius:10px;display:flex;align-items:center;justify-content:center;font-size:22px;margin-bottom:1.5rem}
+.auth-card h1{font-size:20px;font-weight:600;margin-bottom:4px}
+.auth-card .sub{font-size:13px;color:#6B6860;margin-bottom:1.5rem}
+label{display:block;font-size:13px;font-weight:500;color:#6B6860;margin-bottom:5px}
+.inp{width:100%;padding:10px 12px;border:1.5px solid #E2E0D8;border-radius:8px;font-family:'DM Sans',sans-serif;font-size:14px;background:#F5F4F0;color:#1A1916;outline:none;margin-bottom:1rem}
+.inp:focus{border-color:#1A4F8A;background:#fff}
+.btn-blue{width:100%;padding:11px;background:#1A4F8A;color:#fff;border:none;border-radius:8px;font-family:'DM Sans',sans-serif;font-size:14px;font-weight:500;cursor:pointer}
+.btn-blue:hover{opacity:.9}
+.auth-msg{font-size:13px;padding:10px 12px;border-radius:8px;margin-top:1rem;display:none}
+.auth-msg.err{background:#FEF0F0;color:#9B2626;display:block}
+#app{display:none}
+.topbar{background:#fff;border-bottom:1px solid #E2E0D8;padding:0 1.5rem;height:56px;display:flex;align-items:center;justify-content:space-between;position:sticky;top:0;z-index:100}
+.tlogo{width:28px;height:28px;background:#1A4F8A;border-radius:7px;display:flex;align-items:center;justify-content:center;font-size:14px}
+.topbar-left{display:flex;align-items:center;gap:10px}
+.tname{font-size:15px;font-weight:600}
+.t-badge{font-size:11px;background:#EBF2FB;color:#1A4F8A;border-radius:20px;padding:3px 10px;font-weight:500}
+.btn-out{font-size:13px;background:#fff;border:1.5px solid #E2E0D8;border-radius:8px;padding:6px 14px;cursor:pointer;font-family:'DM Sans',sans-serif}
+.btn-out:hover{background:#F5F4F0}
+.page{max-width:1200px;margin:0 auto;padding:1.5rem}
+.page-head{display:flex;align-items:flex-start;justify-content:space-between;margin-bottom:1.5rem;flex-wrap:wrap;gap:1rem}
+.page-head h1{font-size:22px;font-weight:600}
+.page-head p{font-size:13px;color:#6B6860;margin-top:4px}
+.btn-refresh{font-size:13px;background:#fff;border:1.5px solid #E2E0D8;border-radius:8px;padding:7px 14px;cursor:pointer;font-family:'DM Sans',sans-serif}
+.btn-refresh:hover{background:#F5F4F0}
+.tab-row{display:flex;gap:6px;margin-bottom:1.5rem}
+.tab-btn{padding:7px 16px;font-size:13px;border-radius:20px;border:1.5px solid #E2E0D8;cursor:pointer;background:none;color:#6B6860;font-family:'DM Sans',sans-serif}
+.tab-btn:hover{background:#fff}
+.tab-btn.active{background:#1A4F8A;border-color:#1A4F8A;color:#fff;font-weight:500}
+.stats-strip{display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:12px;margin-bottom:1.5rem}
+.stat-card{background:#fff;border:1px solid #E2E0D8;border-radius:12px;padding:1.25rem;box-shadow:0 1px 3px rgba(0,0,0,.06)}
+.stat-n{font-size:30px;font-weight:600;line-height:1}
+.stat-l{font-size:12px;color:#6B6860;margin-top:6px}
+.filter-row{display:flex;gap:8px;margin-bottom:1.25rem;flex-wrap:wrap;align-items:center}
+.search-inp{padding:8px 12px;border:1.5px solid #E2E0D8;border-radius:8px;font-family:'DM Sans',sans-serif;font-size:13px;background:#fff;outline:none;width:220px}
+.search-inp:focus{border-color:#1A4F8A}
+select{padding:8px 12px;border:1.5px solid #E2E0D8;border-radius:8px;font-family:'DM Sans',sans-serif;font-size:13px;background:#fff;color:#1A1916;outline:none;cursor:pointer}
+.s-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(340px,1fr));gap:14px}
+.s-card{background:#fff;border:1px solid #E2E0D8;border-radius:12px;box-shadow:0 1px 3px rgba(0,0,0,.06);overflow:hidden;transition:box-shadow .15s}
+.s-card:hover{box-shadow:0 4px 12px rgba(0,0,0,.08)}
+.s-head{padding:1.25rem;cursor:pointer}
+.s-top{display:flex;align-items:flex-start;gap:12px;margin-bottom:1rem}
+.avatar{width:40px;height:40px;min-width:40px;border-radius:50%;background:#EBF2FB;display:flex;align-items:center;justify-content:center;font-size:15px;font-weight:600;color:#1A4F8A}
+.s-info{flex:1;min-width:0}
+.s-name{font-size:15px;font-weight:600;margin-bottom:2px;display:flex;align-items:center;gap:8px;flex-wrap:wrap}
+.s-email{font-size:12px;color:#6B6860;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.s-pct{font-size:22px;font-weight:600;text-align:right;line-height:1}
+.s-pct-sub{font-size:11px;color:#9E9C96;text-align:right}
+.prog-bar{height:5px;background:#E2E0D8;border-radius:3px;overflow:hidden;margin-bottom:10px}
+.prog-fill{height:100%;border-radius:3px;transition:width .3s}
+.cat-mini{display:grid;grid-template-columns:1fr 1fr;gap:4px 16px;margin-bottom:8px;font-size:12px;color:#6B6860}
+.cat-mini span{font-weight:500;color:#1A1916}
+.s-last{font-size:11px;color:#9E9C96}
+.alert-badge{font-size:10px;padding:2px 7px;border-radius:10px;background:#FEF3E2;color:#92580A;font-weight:500}
+.ok-badge{font-size:10px;padding:2px 7px;border-radius:10px;background:#E6F2EC;color:#1D6B4E;font-weight:500}
+.s-detail{display:none;border-top:1px solid #E2E0D8;padding:1rem 1.25rem}
+.s-detail.open{display:block}
+.dlabel{font-size:11px;font-weight:600;text-transform:uppercase;letter-spacing:.5px;color:#9E9C96;margin-bottom:8px}
+.sec-list{list-style:none;margin-bottom:1rem}
+.sec-row{display:flex;align-items:center;gap:10px;padding:5px 0;border-bottom:1px solid #F0EFE8;font-size:13px}
+.sec-row:last-child{border-bottom:none}
+.sec-name{color:#6B6860;flex:1}
+.sec-bar{flex:1;height:3px;background:#E2E0D8;border-radius:2px;overflow:hidden}
+.sec-fill{height:100%;background:#1D6B4E;border-radius:2px}
+.sec-val{font-size:12px;font-weight:500;min-width:32px;text-align:right}
+.u-row{display:flex;align-items:center;gap:10px;padding:7px 10px;background:#F5F4F0;border-radius:7px;margin-bottom:5px}
+.u-icon{font-size:15px;min-width:18px;text-align:center}
+.u-name{font-size:13px;font-weight:500;flex:1;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.u-date{font-size:11px;color:#9E9C96;white-space:nowrap}
+.u-link{font-size:12px;color:#1A4F8A;text-decoration:none}
+.u-link:hover{text-decoration:underline}
+.no-data{font-size:13px;color:#9E9C96;padding:4px 0}
+.ufl-list{list-style:none}
+.ufl-item{display:flex;align-items:center;gap:14px;padding:12px 16px;background:#fff;border:1px solid #E2E0D8;border-radius:10px;margin-bottom:8px;box-shadow:0 1px 3px rgba(0,0,0,.04)}
+.ufl-icon{font-size:20px;min-width:24px;text-align:center}
+.ufl-info{flex:1;min-width:0}
+.ufl-name{font-size:14px;font-weight:500}
+.ufl-student{font-size:12px;color:#6B6860;margin-top:2px}
+.ufl-date{font-size:11px;color:#9E9C96;margin-top:1px}
+.ufl-link{font-size:12px;color:#1A4F8A;text-decoration:none}
+.ufl-link:hover{text-decoration:underline}
+.new-badge{font-size:10px;padding:2px 8px;border-radius:10px;background:#FEF0F0;color:#9B2626;font-weight:600}
+.spinner{text-align:center;padding:3rem;color:#9E9C96;font-size:14px}
+.err-box{background:#FEF0F0;border:1px solid #F5BABA;border-radius:10px;padding:16px 20px;color:#9B2626;font-size:13px;line-height:1.8}
+</style>
+</head>
+<body>
+
+<div id="auth-screen" class="auth-wrap">
+  <div class="auth-card">
+    <div class="auth-logo">&#127979;</div>
+    <h1>Teacher Dashboard</h1>
+    <p class="sub">HSC Multimedia Tracker</p>
+    <label>Email address</label>
+    <input class="inp" type="email" id="t-email" placeholder="barthur@shirechristian.nsw.edu.au">
+    <label>Password</label>
+    <input class="inp" type="password" id="t-pw" placeholder="Password">
+    <button class="btn-blue" onclick="doLogin()">Sign in</button>
+    <div class="auth-msg" id="auth-msg"></div>
+  </div>
+</div>
+
+<div id="app">
+  <div class="topbar">
+    <div class="topbar-left">
+      <div class="tlogo">&#127979;</div>
+      <span class="tname">Teacher Dashboard</span>
+      <span class="t-badge">Teacher view</span>
+    </div>
+    <div style="display:flex;align-items:center;gap:10px">
+      <span style="font-size:13px;color:#6B6860">barthur@shirechristian.nsw.edu.au</span>
+      <button class="btn-out" id="btn-signout">Sign out</button>
+    </div>
+  </div>
+  <div class="page">
+    <div class="page-head">
+      <div>
+        <h1>Class progress overview</h1>
+        <p id="last-updated">Loading...</p>
+      </div>
+      <button class="btn-refresh" id="btn-refresh">&#8635; Refresh</button>
+    </div>
+    <div class="tab-row">
+      <button class="tab-btn active" onclick="switchView('students',this)">Students</button>
+      <button class="tab-btn" onclick="switchView('uploads',this)">All uploads &amp; links</button>
+    </div>
+    <div id="view-students">
+      <div class="stats-strip" id="stats-strip"></div>
+      <div class="filter-row">
+        <input class="search-inp" type="text" id="search" placeholder="Search students..." oninput="renderStudents()">
+        <select id="sort-sel" onchange="renderStudents()">
+          <option value="name">Sort: Name A-Z</option>
+          <option value="pct-asc">Sort: Progress low to high</option>
+          <option value="pct-desc">Sort: Progress high to low</option>
+        </select>
+        <select id="filter-sel" onchange="renderStudents()">
+          <option value="all">All students</option>
+          <option value="alert">Needs attention (under 30%)</option>
+          <option value="ok">On track (over 50%)</option>
+        </select>
+      </div>
+      <div id="loading" class="spinner">Loading student data...</div>
+      <div class="s-grid" id="s-grid"></div>
+    </div>
+    <div id="view-uploads" style="display:none">
+      <ul class="ufl-list" id="ufl-list"></ul>
+    </div>
+  </div>
+</div>
+
+<script>
+var SB_URL = 'https://jthaexmfyiilcwciqdyl.supabase.co';
+var SB_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Imp0aGFleG1meWlpbGN3Y2lxZHlsIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzgwMjY0MTUsImV4cCI6MjA5MzYwMjQxNX0.ewWjAlcgZMcsFH-t71uLXZsuXxo96P3Ejvyh-1cyBn4';
+var TEACHER = 'barthur@shirechristian.nsw.edu.au';
+var TOTAL = 82;
+
+var sb = supabase.createClient(SB_URL, SB_KEY);
+var allStudents = [];
+var allUploads = [];
+
+var SMAP = {
+  'Folio 1.0':['s1_1','s1_2','s1_3','s1_4','s1_5','s1_6'],
+  'Folio 2.0':['s2_1','s2_2','s2_3','s2_4','s2_5','s2_6','s2_7','s2_8','s2_9','s2_10','s2_11','s2_12','s2_13','s2_14'],
+  'Folio 3.0':['s3_1','s3_2','s3_3','s3_4','s3_5'],
+  'Folio 4.0':['s4_1','s4_2','s4_3','s4_4','s4_5'],
+  'Game':['p1_1','p1_2','p1_3','p1_4','p1_5','p1_6','p1_7','p1_8','p1_9'],
+  'Film':['p2_1','p2_2','p2_3','p2_4','p2_5','p2_6','p2_7','p2_8'],
+  'Animation':['p3_1','p3_2','p3_3','p3_4','p3_5','p3_6'],
+  'Exam Written':['e1_1','e1_2','e1_3','e1_4','e1_5'],
+  'Exam Submit':['e2_1','e2_2','e2_3','e2_4','e2_5','e2_6','e2_7','e2_8'],
+  'Theory':['th1_1','th1_2','th1_3','th1_4','th1_5','th1_6','th1_7','th1_8','th1_9','th1_10'],
+  'Term 4':['tm1_1','tm1_2','tm1_3','tm1_4','tm1_5','tm1_6','tm1_7'],
+  'Term 1':['tm2_1','tm2_2','tm2_3','tm2_4','tm2_5'],
+  'Term 2':['tm3_1','tm3_2','tm3_3','tm3_4','tm3_5'],
+  'Term 3':['tm4_1','tm4_2','tm4_3']
+};
+
+// ── AUTH ───────────────────────────────────────────────────
+async function doLogin() {
+  var email = document.getElementById('t-email').value.trim();
+  var pw = document.getElementById('t-pw').value;
+  var msg = document.getElementById('auth-msg');
+  if (!email || !pw) { msg.textContent = 'Please enter email and password.'; msg.className = 'auth-msg err'; return; }
+  var res = await sb.auth.signInWithPassword({ email: email, password: pw });
+  if (res.error) { msg.textContent = res.error.message; msg.className = 'auth-msg err'; }
+}
+
+document.getElementById('btn-signout').onclick = async function() {
+  await sb.auth.signOut();
+};
+
+document.getElementById('btn-refresh').onclick = function() {
+  loadAll();
+};
+
+sb.auth.onAuthStateChange(async function(event, session) {
+  if (session && session.user && session.user.email === TEACHER) {
+    document.getElementById('auth-screen').style.display = 'none';
+    document.getElementById('app').style.display = 'block';
+    loadAll();
+  } else if (session && session.user) {
+    document.getElementById('auth-msg').textContent = 'This account does not have teacher access.';
+    document.getElementById('auth-msg').className = 'auth-msg err';
+    await sb.auth.signOut();
+  } else {
+    document.getElementById('auth-screen').style.display = 'flex';
+    document.getElementById('app').style.display = 'none';
+  }
+});
+
+// ── LOAD DATA ──────────────────────────────────────────────
+async function loadAll() {
+  var loadEl = document.getElementById('loading');
+  var grid = document.getElementById('s-grid');
+  if (loadEl) { loadEl.style.display = 'block'; loadEl.textContent = 'Loading...'; }
+  if (grid) grid.innerHTML = '';
+  document.getElementById('last-updated').textContent = 'Loading...';
+
+  var r1 = await sb.from('checklist_items').select('user_id,item_id').eq('checked', true);
+  var r2 = await sb.from('user_profiles').select('user_id,email,full_name,created_at');
+  var r3 = await sb.from('student_uploads').select('*').order('uploaded_at', { ascending: false });
+
+  if (r2.error || r1.error) {
+    if (loadEl) loadEl.innerHTML = '<div class="err-box"><strong>Error loading data:</strong> ' + (r2.error ? r2.error.message : r1.error.message) + '</div>';
+    document.getElementById('last-updated').textContent = 'Error - see below';
+    return;
+  }
+
+  allUploads = r3.data || [];
+  var checks = r1.data || [];
+  var profiles = (r2.data || []).filter(function(p) { return p.email !== TEACHER; });
+
+  var checkMap = {};
+  checks.forEach(function(c) {
+    if (!checkMap[c.user_id]) checkMap[c.user_id] = {};
+    checkMap[c.user_id][c.item_id] = true;
+  });
+  var uploadMap = {};
+  allUploads.forEach(function(u) {
+    if (!uploadMap[u.user_id]) uploadMap[u.user_id] = [];
+    uploadMap[u.user_id].push(u);
+  });
+
+  allStudents = profiles.map(function(p) {
+    var uc = checkMap[p.user_id] || {};
+    var done = Object.keys(uc).length;
+    var pct = Math.round(done / TOTAL * 100);
+    var cats = { folio: 0, prod: 0, exam: 0, theory: 0 };
+    Object.keys(uc).forEach(function(id) {
+      if (id.startsWith('s')) cats.folio++;
+      else if (id.startsWith('p')) cats.prod++;
+      else if (id.startsWith('e')) cats.exam++;
+      else if (id.startsWith('th')) cats.theory++;
+    });
+    var sections = {};
+    Object.keys(SMAP).forEach(function(name) {
+      var ids = SMAP[name];
+      sections[name] = { done: ids.filter(function(id) { return uc[id]; }).length, total: ids.length };
+    });
+    var uploads = uploadMap[p.user_id] || [];
+    return { id: p.user_id, name: p.full_name || p.email.split('@')[0], email: p.email, done: done, pct: pct, cats: cats, sections: sections, uploads: uploads };
+  });
+
+  if (loadEl) loadEl.style.display = 'none';
+  document.getElementById('last-updated').textContent =
+    profiles.length + ' student' + (profiles.length !== 1 ? 's' : '') +
+    ' \u00b7 ' + checks.length + ' ticked items' +
+    ' \u00b7 Updated ' + new Date().toLocaleTimeString('en-AU', { hour: '2-digit', minute: '2-digit' });
+
+  renderStats();
+  renderStudents();
+  renderUploads();
+}
+
+// ── RENDER ─────────────────────────────────────────────────
+function renderStats() {
+  var n = allStudents.length;
+  var avg = n ? Math.round(allStudents.reduce(function(s, st) { return s + st.pct; }, 0) / n) : 0;
+  var alert = allStudents.filter(function(s) { return s.pct < 30; }).length;
+  var ontrack = allStudents.filter(function(s) { return s.pct >= 50; }).length;
+  document.getElementById('stats-strip').innerHTML =
+    sc(n, '#1D6B4E', 'Total students') +
+    sc(avg + '%', '#1A4F8A', 'Class average') +
+    sc(alert, '#9B2626', 'Need attention') +
+    sc(ontrack, '#1D6B4E', 'On track') +
+    sc(allUploads.length, '#92580A', 'Total uploads');
+}
+function sc(n, col, label) {
+  return '<div class="stat-card"><div class="stat-n" style="color:' + col + '">' + n + '</div><div class="stat-l">' + label + '</div></div>';
+}
+
+function renderStudents() {
+  var q = (document.getElementById('search').value || '').toLowerCase();
+  var sort = document.getElementById('sort-sel').value;
+  var filter = document.getElementById('filter-sel').value;
+  var list = allStudents.slice();
+  if (q) list = list.filter(function(s) { return s.name.toLowerCase().indexOf(q) > -1 || s.email.toLowerCase().indexOf(q) > -1; });
+  if (filter === 'alert') list = list.filter(function(s) { return s.pct < 30; });
+  if (filter === 'ok') list = list.filter(function(s) { return s.pct >= 50; });
+  if (sort === 'name') list.sort(function(a, b) { return a.name.localeCompare(b.name); });
+  else if (sort === 'pct-asc') list.sort(function(a, b) { return a.pct - b.pct; });
+  else if (sort === 'pct-desc') list.sort(function(a, b) { return b.pct - a.pct; });
+  var grid = document.getElementById('s-grid');
+  if (!list.length) { grid.innerHTML = '<div class="no-data" style="padding:2rem">No students found.</div>'; return; }
+  grid.innerHTML = list.map(studentCard).join('');
+}
+
+function studentCard(s) {
+  var initials = s.name.split(' ').map(function(w) { return w[0]; }).join('').slice(0, 2).toUpperCase();
+  var col = s.pct >= 60 ? '#1D6B4E' : s.pct >= 30 ? '#92580A' : '#9B2626';
+  var badge = s.pct < 30 ? '<span class="alert-badge">Needs attention</span>' : s.pct >= 50 ? '<span class="ok-badge">On track</span>' : '';
+  var lastUp = s.uploads.length ? 'Last upload ' + fmtShort(s.uploads[0].uploaded_at) : 'No uploads yet';
+
+  var secRows = Object.keys(SMAP).map(function(name) {
+    var v = s.sections[name] || { done: 0, total: 0 };
+    var p = v.total ? Math.round(v.done / v.total * 100) : 0;
+    return '<li class="sec-row"><span class="sec-name">' + name + '</span>' +
+      '<div class="sec-bar"><div class="sec-fill" style="width:' + p + '%"></div></div>' +
+      '<span class="sec-val">' + v.done + '/' + v.total + '</span></li>';
+  }).join('');
+
+  var upRows = s.uploads.slice(0, 3).map(function(u) {
+    return '<div class="u-row"><span class="u-icon">' + (u.type === 'pdf' ? '&#128196;' : '&#128279;') + '</span>' +
+      '<span class="u-name">' + u.name + '</span>' +
+      '<span class="u-date">' + fmtShort(u.uploaded_at) + '</span>' +
+      (u.url ? '<a href="' + u.url + '" target="_blank" class="u-link">Open</a>' : '') + '</div>';
+  }).join('');
+
+  return '<div class="s-card">' +
+    '<div class="s-head" onclick="toggleDetail(\'' + s.id + '\')">' +
+    '<div class="s-top">' +
+    '<div class="avatar">' + initials + '</div>' +
+    '<div class="s-info"><div class="s-name">' + s.name + ' ' + badge + '</div><div class="s-email">' + s.email + '</div></div>' +
+    '<div><div class="s-pct" style="color:' + col + '">' + s.pct + '%</div><div class="s-pct-sub">' + s.done + '/' + TOTAL + ' tasks</div></div>' +
+    '</div>' +
+    '<div class="prog-bar"><div class="prog-fill" style="width:' + s.pct + '%;background:' + col + '"></div></div>' +
+    '<div class="cat-mini">' +
+    '<div>Folio <span>' + s.cats.folio + '/30</span></div>' +
+    '<div>Production <span>' + s.cats.prod + '/23</span></div>' +
+    '<div>Exam <span>' + s.cats.exam + '/13</span></div>' +
+    '<div>Theory <span>' + s.cats.theory + '/10</span></div>' +
+    '</div>' +
+    '<div class="s-last">' + lastUp + ' &middot; ' + s.uploads.length + ' upload' + (s.uploads.length !== 1 ? 's' : '') + '</div>' +
+    '</div>' +
+    '<div class="s-detail" id="det-' + s.id + '">' +
+    '<div class="dlabel">Section breakdown</div>' +
+    '<ul class="sec-list">' + secRows + '</ul>' +
+    '<div class="dlabel">Recent uploads (' + s.uploads.length + ' total)</div>' +
+    (upRows || '<div class="no-data">No uploads yet</div>') +
+    (s.uploads.length > 3 ? '<div style="font-size:12px;color:#9E9C96;margin-top:6px">' + (s.uploads.length - 3) + ' more in the Uploads tab</div>' : '') +
+    '</div></div>';
+}
+
+function toggleDetail(id) {
+  var el = document.getElementById('det-' + id);
+  if (el) el.classList.toggle('open');
+}
+
+function renderUploads() {
+  var list = document.getElementById('ufl-list');
+  if (!list) return;
+  if (!allUploads.length) { list.innerHTML = '<li class="no-data" style="padding:2rem">No uploads yet.</li>'; return; }
+  var sMap = {};
+  allStudents.forEach(function(s) { sMap[s.id] = s; });
+  var cutoff = new Date(Date.now() - 48 * 60 * 60 * 1000);
+  list.innerHTML = allUploads.map(function(u) {
+    var st = sMap[u.user_id];
+    var isNew = new Date(u.uploaded_at) > cutoff;
+    return '<li class="ufl-item">' +
+      '<span class="ufl-icon">' + (u.type === 'pdf' ? '&#128196;' : '&#128279;') + '</span>' +
+      '<div class="ufl-info">' +
+      '<div class="ufl-name">' + u.name + (isNew ? ' <span class="new-badge">NEW</span>' : '') + '</div>' +
+      '<div class="ufl-student">' + (st ? st.name + ' &middot; ' + st.email : 'Unknown student') + '</div>' +
+      '<div class="ufl-date">' + fmtFull(u.uploaded_at) + '</div>' +
+      '</div>' +
+      (u.url ? '<a href="' + u.url + '" target="_blank" class="ufl-link">Open &#8599;</a>' : '') +
+      '</li>';
+  }).join('');
+}
+
+function switchView(name, btn) {
+  document.getElementById('view-students').style.display = name === 'students' ? 'block' : 'none';
+  document.getElementById('view-uploads').style.display = name === 'uploads' ? 'block' : 'none';
+  document.querySelectorAll('.tab-btn').forEach(function(b) { b.classList.remove('active'); });
+  btn.classList.add('active');
+}
+
+function fmtShort(iso) { return new Date(iso).toLocaleDateString('en-AU', { day: 'numeric', month: 'short' }); }
+function fmtFull(iso) {
+  var d = new Date(iso);
+  return d.toLocaleDateString('en-AU', { day: 'numeric', month: 'short', year: 'numeric' }) + ' at ' + d.toLocaleTimeString('en-AU', { hour: '2-digit', minute: '2-digit' });
+}
+</script>
+</body>
+</html>
