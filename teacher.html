@@ -166,7 +166,9 @@ var SB_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZ
 var TEACHER = 'barthur@shirechristian.nsw.edu.au';
 var TOTAL = 82;
 
-var sb = supabase.createClient(SB_URL, SB_KEY);
+var sb = supabase.createClient(SB_URL, SB_KEY, {
+  auth: { storageKey: 'hsc-teacher-session' }
+});
 var allStudents = [];
 var allUploads = [];
 

@@ -206,7 +206,9 @@ label{display:block;font-size:13px;font-weight:500;color:#6B6860;margin-bottom:5
 <script>
 const SB_URL = 'https://jthaexmfyiilcwciqdyl.supabase.co';
 const SB_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Imp0aGFleG1meWlpbGN3Y2lxZHlsIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzgwMjY0MTUsImV4cCI6MjA5MzYwMjQxNX0.ewWjAlcgZMcsFH-t71uLXZsuXxo96P3Ejvyh-1cyBn4';
-const sb = supabase.createClient(SB_URL, SB_KEY);
+const sb = supabase.createClient(SB_URL, SB_KEY, {
+  auth: { storageKey: 'hsc-student-session' }
+});
 
 let USER = null;
 let CHECKS = {};
