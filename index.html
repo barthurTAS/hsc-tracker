@@ -376,6 +376,7 @@ async function doSignup() {
 // ── SIGN OUT ───────────────────────────────────────────────
 document.getElementById('btn-signout').onclick = async function() {
   await sb.auth.signOut();
+  window.location.href = window.location.pathname + '?signedout=' + Date.now();
 };
 
 // ── SESSION ────────────────────────────────────────────────
@@ -386,7 +387,7 @@ sb.auth.onAuthStateChange(async function(event, session) {
     document.getElementById('app').style.display = 'block';
     document.getElementById('user-chip').textContent = session.user.email;
     await loadChecks();
-    goTab('folio', document.querySelector('.nav-btn.active'));
+    setTimeout(function() { renderFolio(); }, 50);
   } else {
     USER = null;
     CHECKS = {};

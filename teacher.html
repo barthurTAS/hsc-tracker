@@ -199,6 +199,7 @@ async function doLogin() {
 
 document.getElementById('btn-signout').onclick = async function() {
   await sb.auth.signOut();
+  window.location.href = window.location.pathname + '?signedout=' + Date.now();
 };
 
 document.getElementById('btn-refresh').onclick = function() {
