@@ -197,9 +197,11 @@ async function doLogin() {
   if (res.error) { msg.textContent = res.error.message; msg.className = 'auth-msg err'; }
 }
 
-document.getElementById('btn-signout').onclick = async function() {
-  await sb.auth.signOut();
-  window.location.href = window.location.pathname + '?signedout=' + Date.now();
+document.getElementById('btn-signout').onclick = function() {
+  sb.auth.signOut().then(function() {
+    document.getElementById('app').style.display = 'none';
+    document.getElementById('auth-screen').style.display = 'flex';
+  });
 };
 
 document.getElementById('btn-refresh').onclick = function() {
@@ -207,6 +209,11 @@ document.getElementById('btn-refresh').onclick = function() {
 };
 
 sb.auth.onAuthStateChange(async function(event, session) {
+  if (event === 'SIGNED_OUT') {
+    document.getElementById('app').style.display = 'none';
+    document.getElementById('auth-screen').style.display = 'flex';
+    return;
+  }
   if (session && session.user && session.user.email === TEACHER) {
     document.getElementById('auth-screen').style.display = 'none';
     document.getElementById('app').style.display = 'block';

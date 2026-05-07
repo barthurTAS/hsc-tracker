@@ -374,26 +374,35 @@ async function doSignup() {
 }
 
 // ── SIGN OUT ───────────────────────────────────────────────
-document.getElementById('btn-signout').onclick = async function() {
-  await sb.auth.signOut();
-  window.location.href = window.location.pathname + '?signedout=' + Date.now();
+// ── SIGN OUT ──────────────────────────────────────────────
+document.getElementById('btn-signout').onclick = function() {
+  sb.auth.signOut().then(function() {
+    document.getElementById('app').style.display = 'none';
+    document.getElementById('auth-screen').style.display = 'flex';
+    document.getElementById('main-content').innerHTML = '';
+    USER = null;
+    CHECKS = {};
+  });
 };
 
 // ── SESSION ────────────────────────────────────────────────
 sb.auth.onAuthStateChange(async function(event, session) {
+  if (event === 'SIGNED_OUT') {
+    USER = null;
+    CHECKS = {};
+    document.getElementById('app').style.display = 'none';
+    document.getElementById('auth-screen').style.display = 'flex';
+    document.getElementById('main-content').innerHTML = '';
+    clearAuthMsg();
+    return;
+  }
   if (session && session.user) {
     USER = session.user;
     document.getElementById('auth-screen').style.display = 'none';
     document.getElementById('app').style.display = 'block';
     document.getElementById('user-chip').textContent = session.user.email;
     await loadChecks();
-    setTimeout(function() { renderFolio(); }, 50);
-  } else {
-    USER = null;
-    CHECKS = {};
-    document.getElementById('auth-screen').style.display = 'flex';
-    document.getElementById('app').style.display = 'none';
-    clearAuthMsg();
+    renderFolio();
   }
 });
 
