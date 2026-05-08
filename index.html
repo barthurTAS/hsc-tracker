@@ -376,7 +376,6 @@ async function doSignup() {
 }
 
 // ── SIGN OUT ───────────────────────────────────────────────
-// ── SIGN OUT ──────────────────────────────────────────────
 document.getElementById('btn-signout').onclick = function() {
   Object.keys(localStorage).forEach(function(k) {
     if (k.indexOf('supabase') > -1 || k.indexOf('sb-') > -1 || k.indexOf('hsc-student-session') > -1) {
@@ -384,8 +383,6 @@ document.getElementById('btn-signout').onclick = function() {
     }
   });
   window.location.reload();
-};
-  });
 };
 
 // ── SESSION ────────────────────────────────────────────────
