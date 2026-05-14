@@ -387,6 +387,7 @@ document.getElementById('btn-signout').onclick = function() {
 
 // ── SESSION ────────────────────────────────────────────────
 sb.auth.onAuthStateChange(async function(event, session) {
+  console.log('Auth event:', event);
   if (event === 'SIGNED_OUT') {
     USER = null;
     CHECKS = {};
@@ -396,9 +397,7 @@ sb.auth.onAuthStateChange(async function(event, session) {
     clearAuthMsg();
     return;
   }
-  // Only initialise on first sign in or page load - not on every token refresh
-  if ((event === 'SIGNED_IN' || event === 'INITIAL_SESSION') && session && session.user) {
-    if (USER && USER.id === session.user.id) return; // already loaded
+  if (session && session.user && !USER) {
     USER = session.user;
     document.getElementById('auth-screen').style.display = 'none';
     document.getElementById('app').style.display = 'block';

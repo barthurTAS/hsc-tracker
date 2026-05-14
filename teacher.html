@@ -244,9 +244,11 @@ async function loadAll() {
   if (grid) grid.innerHTML = '';
   document.getElementById('last-updated').textContent = 'Loading...';
 
+  console.log('Fetching data at', new Date().toLocaleTimeString());
   var r1 = await sb.from('checklist_items').select('user_id,item_id').eq('checked', true);
   var r2 = await sb.from('user_profiles').select('user_id,email,full_name,created_at');
   var r3 = await sb.from('student_uploads').select('*').order('uploaded_at', { ascending: false });
+  console.log('Got', (r1.data||[]).length, 'checks,', (r2.data||[]).length, 'profiles');
 
   if (r2.error || r1.error) {
     if (loadEl) loadEl.innerHTML = '<div class="err-box"><strong>Error loading data:</strong> ' + (r2.error ? r2.error.message : r1.error.message) + '</div>';
