@@ -396,7 +396,9 @@ sb.auth.onAuthStateChange(async function(event, session) {
     clearAuthMsg();
     return;
   }
-  if (session && session.user) {
+  // Only initialise on first sign in or page load - not on every token refresh
+  if ((event === 'SIGNED_IN' || event === 'INITIAL_SESSION') && session && session.user) {
+    if (USER && USER.id === session.user.id) return; // already loaded
     USER = session.user;
     document.getElementById('auth-screen').style.display = 'none';
     document.getElementById('app').style.display = 'block';
