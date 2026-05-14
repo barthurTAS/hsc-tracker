@@ -164,7 +164,7 @@ select{padding:8px 12px;border:1.5px solid #E2E0D8;border-radius:8px;font-family
 var SB_URL = 'https://jthaexmfyiilcwciqdyl.supabase.co';
 var SB_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Imp0aGFleG1meWlpbGN3Y2lxZHlsIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzgwMjY0MTUsImV4cCI6MjA5MzYwMjQxNX0.ewWjAlcgZMcsFH-t71uLXZsuXxo96P3Ejvyh-1cyBn4';
 var TEACHER = 'barthur@shirechristian.nsw.edu.au';
-var TOTAL = 82;
+var TOTAL = 96;
 
 var sb = supabase.createClient(SB_URL, SB_KEY, {
   auth: { storageKey: 'hsc-teacher-session' }
@@ -278,7 +278,7 @@ async function loadAll() {
     var cats = { folio: 0, prod: 0, exam: 0, theory: 0 };
     Object.keys(uc).forEach(function(id) {
       if (id.startsWith('s')) cats.folio++;
-      else if (id.startsWith('p')) cats.prod++;
+      else if (id.startsWith('p1') || id.startsWith('p2') || id.startsWith('p3')) cats.prod++;
       else if (id.startsWith('e')) cats.exam++;
       else if (id.startsWith('th')) cats.theory++;
     });
